@@ -10,7 +10,7 @@ from merlin.core import dataset
 envPath = os.path.join(os.path.expanduser('~'), '.merlinenv')
 
 if os.path.exists(envPath):
-    dotenv.load_dotenv(envPath)
+    dotenv.load_dotenv(envPath, encoding="utf-16")
 
     try:
         DATA_HOME = os.path.expanduser(os.environ.get('DATA_HOME'))
@@ -40,7 +40,7 @@ else:
 
 
 def store_env(dataHome, analysisHome, parametersHome):
-    with open(envPath, 'w') as f:
+    with open(envPath, 'w', encoding="utf-16") as f:
         f.write('DATA_HOME=%s\n' % dataHome)
         f.write('ANALYSIS_HOME=%s\n' % analysisHome)
         f.write('PARAMETERS_HOME=%s\n' % parametersHome)

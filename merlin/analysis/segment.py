@@ -151,7 +151,7 @@ class CleanCellBoundaries(analysistask.ParallelAnalysisTask):
         allFOVs = np.array(self.dataSet.get_fovs())
         fovBoxes = self.alignTask.get_fov_boxes()
         fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
-                                   fovBoxes[fragmentIndex].intersects(x)])
+                                   fovBoxes[int(fragmentIndex)].intersects(x)])
         intersectingFOVs = list(allFOVs[np.array(fovIntersections)])
 
         spatialTree = rtree.index.Index()
@@ -170,7 +170,7 @@ class CleanCellBoundaries(analysistask.ParallelAnalysisTask):
             .read_features(fragmentIndex)
         cells = spatialfeature.simple_clean_cells(cells)
         graph = spatialfeature.construct_graph(graph, cells,
-                                               spatialTree, fragmentIndex,
+                                               spatialTree, int(fragmentIndex),
                                                allFOVs, fovBoxes)
 
         self.dataSet.save_graph_as_gpickle(
@@ -282,3 +282,113 @@ class ExportCellMetadata(analysistask.AnalysisTask):
 
         self.dataSet.save_dataframe_to_csv(df, 'feature_metadata',
                                            self.analysisName)
+
+
+# class CellposeSegment(analysistask.AnalysisTask):
+#
+#     def setup(self) -> None:
+#         super().setup(parallel=True)
+#
+#         self.add_dependencies({"global_align_task": []})
+#         self.add_dependencies({"flat_field_task": []}, optional=True)
+#
+#         self.set_default_parameters(
+#             {
+#                 "channel": "DAPI",
+#                 "z_pos": None,
+#                 "diameter": None,
+#                 "cellprob_threshold": None,
+#                 "flow_threshold": None,
+#                 "minimum_size": None,
+#                 "dilate_cells": None,
+#                 "downscale_xy": 1,
+#                 "downscale_z": 1,
+#             }
+#         )
+#
+#         self.define_results("mask", ("cell_metadata", {"index": False}))
+#
+#         self.channelIndex = self.dataSet.get_data_organization().get_data_channel_index(self.parameters["channel"])
+#
+#     def load_mask(self):
+#         mask = self.load_result("mask")
+#         if mask.ndim == 3:
+#             shape = (
+#                 mask.shape[0] * self.parameters["downscale_z"],
+#                 mask.shape[1] * self.parameters["downscale_xy"],
+#                 mask.shape[2] * self.parameters["downscale_xy"],
+#             )
+#             z_int = np.round(np.linspace(0, mask.shape[0] - 1, shape[0])).astype(int)
+#             x_int = np.round(np.linspace(0, mask.shape[1] - 1, shape[1])).astype(int)
+#             y_int = np.round(np.linspace(0, mask.shape[2] - 1, shape[2])).astype(int)
+#             return mask[z_int][:, x_int][:, :, y_int]
+#         shape = (
+#             mask.shape[0] * self.parameters["downscale_xy"],
+#             mask.shape[1] * self.parameters["downscale_xy"],
+#         )
+#         x_int = np.round(np.linspace(0, mask.shape[0] - 1, shape[0])).astype(int)
+#         y_int = np.round(np.linspace(0, mask.shape[1] - 1, shape[1])).astype(int)
+#         return mask[x_int][:, y_int]
+#
+#     def load_cell_metadata(self):
+#         return self.dataSet.load_dataframe_from_csv(
+#             "cell_metadata", self.analysis_name, self.fragment, subdirectory="cell_metadata"
+#         )
+#
+#     def load_image(self, zIndex):
+#         image = self.dataSet.get_raw_image(self.channelIndex, self.fragment, zIndex)
+#         if "flat_field_task" in self.dependencies:
+#             image = self.flat_field_task.process_image(image)
+#         return image[:: self.parameters["downscale_xy"], :: self.parameters["downscale_xy"]]
+#
+#     def run_analysis(self):
+#         if self.parameters["z_pos"] is not None:
+#             zIndex = self.dataSet.position_to_z_index(self.parameters["z_pos"])
+#             inputImage = self.load_image(zIndex)
+#         else:
+#             zPositions = self.dataSet.get_z_positions()[:: self.parameters["downscale_z"]]
+#             inputImage = np.array([self.load_image(self.dataSet.position_to_z_index(zIndex)) for zIndex in zPositions])
+#         model = cpmodels.Cellpose(gpu=False, model_type="cyto2")
+#         if inputImage.ndim == 2:
+#             mask, _, _, _ = model.eval(
+#                 inputImage,
+#                 channels=[0, 0],
+#                 diameter=self.parameters["diameter"],
+#                 cellprob_threshold=self.parameters["cellprob_threshold"],
+#                 flow_threshold=self.parameters["flow_threshold"],
+#             )
+#         else:
+#             frames, _, _, _ = model.eval(list(inputImage))
+#             mask = np.array(utils.stitch3D(frames))
+#         if self.parameters["minimum_size"]:
+#             sizes = pd.DataFrame(regionprops_table(mask, properties=["label", "area"]))
+#             mask[np.isin(mask, sizes[sizes["area"] < self.parameters["minimum_size"]]["label"])] = 0
+#         if self.parameters["dilate_cells"]:
+#             if mask.ndim == 2:
+#                 mask = expand_labels(mask, self.parameters["dilate_cells"])
+#             else:
+#                 mask = np.array([expand_labels(frame, self.parameters["dilate_cells"]) for frame in mask])
+#         cell_metadata = pd.DataFrame(regionprops_table(mask, properties=["label", "area", "centroid"]))
+#         columns = ["cell_id", "volume"]
+#         if mask.ndim == 3:
+#             columns.append("z")
+#         columns.extend(["x", "y"])
+#         cell_metadata.columns = columns
+#         downscale = self.parameters["downscale_xy"]
+#         cell_metadata["x"] *= downscale
+#         cell_metadata["y"] *= downscale
+#         if mask.ndim == 3:
+#             cell_metadata["z"] *= self.parameters["downscale_z"]
+#             cell_metadata["volume"] *= downscale * downscale * self.parameters["downscale_z"]
+#         else:
+#             cell_metadata["volume"] *= downscale * downscale
+#         global_x, global_y = self.global_align_task.fov_coordinates_to_global(
+#             self.fragment, cell_metadata[["x", "y"]].T.to_numpy()
+#         )
+#         cell_metadata["global_x"] = global_x
+#         cell_metadata["global_y"] = global_y
+#         self.mask = mask
+#         self.cell_metadata = cell_metadata
+#
+#     def metadata(self) -> dict:
+#         return {"cells": len(self.cell_metadata)}

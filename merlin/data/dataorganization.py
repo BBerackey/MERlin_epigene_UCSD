@@ -314,7 +314,12 @@ class DataOrganization(object):
 
                 matchingFiles = False
                 for currentFile in fileNames:
-                    matchedName = matchRE.search(currentFile)
+                    # edited by bereket
+                    # NOTE: fileNames is list of rawdata filename with full path, but we
+                    # only need the name of the file, so separeted it with os.path.basename
+                    # this also avoids error in case the some part of the file path
+                    # matches the regular exp
+                    matchedName = matchRE.search(os.path.basename(currentFile))
                     if matchedName is not None:
                         transformedName = matchedName.groupdict()
                         if transformedName['imageType'] == currentType:

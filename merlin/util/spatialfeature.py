@@ -114,7 +114,7 @@ class SpatialFeature(object):
         transformedList = []
         for b in boundaries:
             reshapedBoundaries = np.reshape(
-                b, (1, b.shape[0], 2)).astype(np.float)
+                b, (1, b.shape[0], 2)).astype(np.float64)
             transformedBoundaries = cv2.transform(
                 reshapedBoundaries, transformationMatrix)[0, :, :2]
             transformedList.append(transformedBoundaries)
@@ -525,7 +525,7 @@ class HDF5SpatialFeatureDB(SpatialFeatureDB):
         """
         if fov is None:
             finalDF = pandas.concat([self.read_feature_metadata(x)
-                                     for x in self._dataSet.get_fovs()], 0)
+                                     for x in self._dataSet.get_fovs()], axis=0)
 
         else:
             try:
@@ -726,13 +726,15 @@ def construct_graph(graph, cells, spatialTree, currentFOV, allFOVs, fovBoxes):
     fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
                                fovBoxes[currentFOV].intersects(x)])
 
+    intersectingFOVs = list(allFOVs[np.array(fovIntersections)])
+
     coords = [x.centroid.coords.xy for x in fovBoxes]
     xcoords = [x[0][0] for x in coords]
     ycoords = [x[1][0] for x in coords]
     coordsDF = pandas.DataFrame(data=np.array(list(zip(xcoords, ycoords))),
                                 index=allFOVs,
                                 columns=['centerX', 'centerY'])
-    fovTree = cKDTree(data=coordsDF.loc[fovIntersections,
+    fovTree = cKDTree(data=coordsDF.loc[intersectingFOVs,
                                         ['centerX', 'centerY']].values)
     for cell in cells:
         overlappingCells = spatialTree.intersection(
@@ -749,7 +751,7 @@ def construct_graph(graph, cells, spatialTree, currentFOV, allFOVs, fovBoxes):
                 xCenter = (xmin + xmax) / 2
                 yCenter = (ymin + ymax) / 2
                 [d, i] = fovTree.query(np.array([xCenter, yCenter]))
-                assignedFOV = coordsDF.loc[fovIntersections, :]\
+                assignedFOV = coordsDF.loc[intersectingFOVs, :]\
                     .index.values.tolist()[i]
                 if cellToConsider.get_feature_id() not in graph.nodes:
                     graph.add_node(cellToConsider.get_feature_id(),

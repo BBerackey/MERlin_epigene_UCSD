@@ -287,7 +287,8 @@ class DataSet(object):
         """
         savePath = self._analysis_result_save_path(
             resultName, analysisTask, resultIndex, subdirectory, '.gpickle')
-        nx.readwrite.gpickle.write_gpickle(graph, savePath)
+        # nx.readwrite.gpickle.write_gpickle(graph, savePath)
+        pickle.dump(graph, open(savePath, 'wb'))
 
     def load_graph_from_gpickle(
             self, resultName: str, analysisTask: TaskOrName = None,
@@ -308,7 +309,8 @@ class DataSet(object):
         """
         savePath = self._analysis_result_save_path(
             resultName, analysisTask, resultIndex, subdirectory, '.gpickle')
-        return nx.readwrite.gpickle.read_gpickle(savePath)
+        # return nx.readwrite.gpickle.read_gpickle(savePath)
+        return pickle.load(open(savePath, 'rb'))
 
     def save_dataframe_to_csv(
             self, dataframe: pandas.DataFrame, resultName: str,
