@@ -1209,7 +1209,10 @@ class MERFISHDataSet(ImageDataSet):
             self._import_positions_from_metadata()
         self.positions = pandas.read_csv(
             positionPath, header=None, names=['X', 'Y'])
-        self.positions.index = self.get_fovs()
+        # self.positions.index = self.get_fovs()
+        self.positions = self.positions.iloc[self.get_fovs()] # edited by bereket
+        # Note each row in the positions folder correspond to FOV, => fovs are indexed using integer starting from 0
+        # but sometimes due to focus lock issue not all FOVs are imaged => we need to filter those FOVs out.
 
     def _import_positions(self, positionFileName):
         sourcePath = os.sep.join([merlin.POSITION_HOME, positionFileName])

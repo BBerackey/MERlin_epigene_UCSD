@@ -102,7 +102,7 @@ def merlin():
         print('Configuring MERlin environment')
         configure_environment()
         return
-    
+
     dataSet = dataset.MERFISHDataSet(
         args.dataset,
         dataOrganizationName=_clean_string_arg(args.data_organization),
