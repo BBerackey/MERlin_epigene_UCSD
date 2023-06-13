@@ -150,8 +150,13 @@ class CleanCellBoundaries(analysistask.ParallelAnalysisTask):
     def _run_analysis(self, fragmentIndex) -> None:
         allFOVs = np.array(self.dataSet.get_fovs())
         fovBoxes = self.alignTask.get_fov_boxes()
+        #fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
+        #                           fovBoxes[int(fragmentIndex)].intersects(x)])
         fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
-                                   fovBoxes[int(fragmentIndex)].intersects(x)])
+                                   fovBoxes[np.nonzero(allFOVs == fragmentIndex)[0][0]].intersects(x)])
+                                   # modified by bereket, previously the code was trying to us teh FOV number as index the list, fovBOX
+                                # which is a list of the geometry object for each fov, but this fails if the fov is missing
+
         intersectingFOVs = list(allFOVs[np.array(fovIntersections)])
 
         spatialTree = rtree.index.Index()
