@@ -175,7 +175,7 @@ class CleanCellBoundaries(analysistask.ParallelAnalysisTask):
             .read_features(fragmentIndex)
         cells = spatialfeature.simple_clean_cells(cells)
         graph = spatialfeature.construct_graph(graph, cells,
-                                               spatialTree, int(fragmentIndex),
+                                               spatialTree, fragmentIndex,
                                                allFOVs, fovBoxes)
 
         self.dataSet.save_graph_as_gpickle(

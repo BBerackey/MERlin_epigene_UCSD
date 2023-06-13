@@ -723,8 +723,11 @@ def construct_graph(graph, cells, spatialTree, currentFOV, allFOVs, fovBoxes):
         A graph updated to include cells from the current fov
     """
 
-    fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
-                               fovBoxes[currentFOV].intersects(x)])
+    #fovIntersections = sorted([i for i, x in enumerate(fovBoxes) if
+    #                           fovBoxes[currentFOV].intersects(x)])
+
+    fovIntersections = sorted([i for i,x in enumerate(fovBoxes) if
+                                fovBoxes[np.nonzero(allFOVs == currentFOV)[0][0]]])
 
     intersectingFOVs = list(allFOVs[np.array(fovIntersections)])
 
