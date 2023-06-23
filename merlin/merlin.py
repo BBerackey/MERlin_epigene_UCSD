@@ -74,6 +74,9 @@ def _clean_string_arg(stringIn):
 def _get_input_path(prompt):
     while True:
         pathString = str(input(prompt))
+        if prompt == 'Zarr_HOME=':
+            if not pathString:
+                return 'None'# return None to indicate nothing was entered
         if not pathString.startswith('s3://') \
                 and not os.path.exists(os.path.expanduser(pathString)):
             print('Directory %s does not exist. Please enter a valid path.'
@@ -86,7 +89,8 @@ def configure_environment():
     dataHome = _get_input_path('DATA_HOME=')
     analysisHome = _get_input_path('ANALYSIS_HOME=')
     parametersHome = _get_input_path('PARAMETERS_HOME=')
-    m.store_env(dataHome, analysisHome, parametersHome)
+    zarrHome = _get_input_path('Zarr_HOME=') # modified by bereket
+    m.store_env(dataHome, analysisHome, parametersHome,zarrHome)
 
 
 def merlin():
@@ -102,6 +106,9 @@ def merlin():
         print('Configuring MERlin environment')
         configure_environment()
         return
+
+    # import pdb
+    # pdb.set_trace()
 
     dataSet = dataset.MERFISHDataSet(
         args.dataset,

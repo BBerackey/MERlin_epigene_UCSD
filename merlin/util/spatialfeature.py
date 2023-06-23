@@ -727,7 +727,7 @@ def construct_graph(graph, cells, spatialTree, currentFOV, allFOVs, fovBoxes):
     #                           fovBoxes[currentFOV].intersects(x)])
 
     fovIntersections = sorted([i for i,x in enumerate(fovBoxes) if
-                                fovBoxes[np.nonzero(allFOVs == currentFOV)[0][0]].interset(x)])
+                                fovBoxes[np.nonzero(allFOVs == currentFOV)[0][0]].intersects(x)])
 
     intersectingFOVs = list(allFOVs[np.array(fovIntersections)])
 

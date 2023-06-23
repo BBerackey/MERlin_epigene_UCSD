@@ -16,6 +16,8 @@ if os.path.exists(envPath):
         DATA_HOME = os.path.expanduser(os.environ.get('DATA_HOME'))
         ANALYSIS_HOME = os.path.expanduser(os.environ.get('ANALYSIS_HOME'))
         PARAMETERS_HOME = os.path.expanduser(os.environ.get('PARAMETERS_HOME'))
+        Zarr_HOME = os.path.expanduser(os.environ.get('Zarr_HOME')) # modified by bereket 
+        
         ANALYSIS_PARAMETERS_HOME = os.sep.join(
                 [PARAMETERS_HOME, 'analysis'])
         CODEBOOK_HOME = os.sep.join(
@@ -39,11 +41,12 @@ else:
           % envPath)
 
 
-def store_env(dataHome, analysisHome, parametersHome):
+def store_env(dataHome, analysisHome, parametersHome,zarrHome):
     with open(envPath, 'w', encoding="utf-16") as f:
         f.write('DATA_HOME=%s\n' % dataHome)
         f.write('ANALYSIS_HOME=%s\n' % analysisHome)
         f.write('PARAMETERS_HOME=%s\n' % parametersHome)
+        f.write('Zarr_HOME=%s\n' % zarrHome) # modified by bereket
 
 
 class IncompatibleVersionException(Exception):

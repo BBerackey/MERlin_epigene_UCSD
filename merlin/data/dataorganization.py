@@ -370,7 +370,7 @@ class DataOrganization(object):
                         channelInfo['imagingRound'])
                 except IndexError:
                     raise FileNotFoundError(
-                        'Unable to find image path for %s, fov=%i, round=%i' %
+                        'Unable to find image path for %s, fov=%s, round=%i' %
                         (channelInfo['imageType'], fov,
                          channelInfo['imagingRound']))
 

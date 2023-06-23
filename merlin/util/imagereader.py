@@ -7,6 +7,7 @@ import zarr
 from typing import List
 
 from merlin.util import dataportal
+import merlin
 
 # The following  code is adopted from github.com/ZhuangLab/storm-analysis and
 # is subject to the following license:
@@ -388,10 +389,14 @@ class ZarrReader(Reader):
 
     def __init__(self, filename, verbose=False):
         super(ZarrReader, self).__init__(filename, verbose)
-
         dirname = os.path.dirname(filename)
         fov = os.path.basename(filename).split("_")[-1].split(".")[0]
         filename_ = os.path.join(dirname, fov, 'data')
+        
+        if not merlin.Zarr_HOME == "None": # if not None
+            hyb = os.path.basename(filename).split("_")[-3] # get filename
+            filename_ = os.path.join(merlin.Zarr_HOME,hyb,fov,'data') # path to original/full zarr data
+            
         if os.path.exists(filename_):
             self.zarr = zarr.open(filename_, mode="r")
         else:

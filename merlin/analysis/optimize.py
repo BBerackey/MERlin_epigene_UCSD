@@ -229,7 +229,7 @@ class OptimizeIteration(decode.BarcodeSavingParallelAnalysisTask):
                 'chromatic_corrections', self.analysisName)
         # OSError and ValueError are raised if the previous file is not
         # completely written
-        except (FileNotFoundError, OSError, ValueError):
+        except (FileNotFoundError, OSError, ValueError,EOFError):
             # TODO - this is messy. It can be broken into smaller subunits and
             # most parts could be included in a chromatic aberration class
             previousTransformations = \

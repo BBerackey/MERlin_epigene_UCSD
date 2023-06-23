@@ -490,8 +490,10 @@ class DataSet(object):
             resultIndex: int = None, subdirectory: str = None):
         savePath = self._analysis_result_save_path(
             resultName, analysisName, resultIndex, subdirectory, '.pkl')
-        with open(savePath, 'wb') as f:
-            pickle.dump(analysisResult, f)
+
+        if not os.path.exists(savePath): # only save if there is no such file
+            with open(savePath, 'wb') as f:
+                pickle.dump(analysisResult, f)
 
     def save_numpy_analysis_result(
             self, analysisResult: np.ndarray, resultName: str,
@@ -565,7 +567,8 @@ class DataSet(object):
                     [self.analysisPath, analysisName, subdirectory])
 
         if create:
-            os.makedirs(subdirectoryPath, exist_ok=True)
+            if not os.path.exists(subdirectoryPath):
+                os.makedirs(subdirectoryPath, exist_ok=True)
 
         return subdirectoryPath
 
@@ -1126,12 +1129,12 @@ class MERFISHDataSet(ImageDataSet):
     def get_stage_positions(self) -> List[List[float]]:
         return self.positions
 
-    def get_fov_offset(self, fov: int) -> Tuple[float, float]:
+    def get_fov_offset(self, fov: str) -> Tuple[float, float]:
         """Get the offset of the specified fov in the global coordinate system.
         This offset is based on the anticipated stage position.
 
         Args:
-            fov: index of the field of view
+            fov: index of the field of view as a string
         Returns:
             A tuple specifying the x and y offset of the top right corner
             of the specified fov in pixels.
@@ -1210,9 +1213,13 @@ class MERFISHDataSet(ImageDataSet):
         self.positions = pandas.read_csv(
             positionPath, header=None, names=['X', 'Y'])
         # self.positions.index = self.get_fovs()
-        self.positions = self.positions.iloc[self.get_fovs()] # edited by bereket
-        # Note each row in the positions folder correspond to FOV, => fovs are indexed using integer starting from 0
-        # but sometimes due to focus lock issue not all FOVs are imaged => we need to filter those FOVs out.
+        self.positions = self.positions.iloc[self.get_fovs().astype(int)] # edited by bereket
+        self.positions.index = self.get_fovs()
+        # Note each row in the positions file correspond to FOV, => fovs are indexed using integer starting from 0
+        # but sometimes due to focus lock issue not all FOVs are imaged => we need to filter those FOVs out. Also note
+        # self.get_fovs() returns fov as string => we need to change to int before using it in iloc. changing to int also
+        # fixs the issue of properly converting string fov to int e.g. '0000' to 0
+        # finally, index of the filtered position dataframe will be string fovs.
 
     def _import_positions(self, positionFileName):
         sourcePath = os.sep.join([merlin.POSITION_HOME, positionFileName])

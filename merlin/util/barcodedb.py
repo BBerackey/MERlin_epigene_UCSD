@@ -207,9 +207,9 @@ class PyTablesBarcodeDB(BarcodeDB):
                         return pandas.DataFrame()
 
                     if columnList is None:
-                        barcodes = pandasHDF['barcodes']
+                        barcodes = pandasHDF['/barcodes']
                     else:
-                        barcodes = pandas.read_hdf(pandasHDF, key='barcodes',
+                        barcodes = pandas.read_hdf(pandasHDF, key='/barcodes',
                                                    columns=columnList)
 
             except OSError:
@@ -222,7 +222,7 @@ class PyTablesBarcodeDB(BarcodeDB):
                 barcodes = pandas.DataFrame(columns=columnList)
             else:
                 barcodes = pandas.DataFrame(
-                    columns=self._get_bc_column_types().keys())
+                    columns=list(self._get_bc_column_types().keys()))
 
         return barcodes
 
