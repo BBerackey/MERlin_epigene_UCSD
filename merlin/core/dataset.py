@@ -922,6 +922,19 @@ class ImageDataSet(DataSet):
         """
         with imagereader.infer_reader(self.rawDataPortal.open_file(imagePath)
                                       ) as reader:
+            # Modified by bereket, whenever this method is called, it should also make sure the
+            # self.imageDimension is also set correctly
+            # Note: since teh microscope parameters are loaded within the init method, the code below should be fine
+            if ('image_dimensions' not in self.microscopeParameters) or  \
+               (self.imageDimensions != [reader.image_width, reader.image_height]):
+                    # make sure the image dimension is correct and update the microscope parameter accordingly
+                    self.imageDimensions = [reader.image_width, reader.image_height]
+                    self.microscopeParameters.update({'image_dimensions':self.imageDimensions})
+
+                    # make sure to re-save it on disk so that the correct version is load in the future
+                    with open(os.sep.join([self.analysisPath, 'microscope_parameters.json']),'w') as f:
+                        json.dump(self.microscopeParameters,f)
+
             return reader.film_size()
 
     def _import_microscope_parameters(self, microscopeParametersName):
@@ -1144,7 +1157,10 @@ class MERFISHDataSet(ImageDataSet):
 
     def z_index_to_position(self, zIndex: int) -> float:
         """Get the z position associated with the provided z index."""
-
+        # Makeing sure the index is set appropriately
+        zIndex = max(
+            min(zIndex, len(self.get_z_positions()) - 1),
+            0)
         return self.get_z_positions()[zIndex]
 
     def position_to_z_index(self, zPosition: float) -> int:

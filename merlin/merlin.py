@@ -107,9 +107,6 @@ def merlin():
         configure_environment()
         return
 
-    # import pdb
-    # pdb.set_trace()
-
     dataSet = dataset.MERFISHDataSet(
         args.dataset,
         dataOrganizationName=_clean_string_arg(args.data_organization),

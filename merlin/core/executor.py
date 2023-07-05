@@ -45,6 +45,7 @@ class LocalExecutor(Executor):
 
     def run(self, task: analysistask.AnalysisTask, index: int=None,
             rerunCompleted: bool=False) -> None:
+
         if task.is_complete() and not rerunCompleted:
             return
 
