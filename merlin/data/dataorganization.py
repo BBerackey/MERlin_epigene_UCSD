@@ -5,6 +5,7 @@ from typing import List
 from typing import Tuple
 import pandas
 import numpy as np
+from pathlib import Path
 
 import merlin
 from merlin.core import dataset
@@ -78,8 +79,12 @@ class DataOrganization(object):
         self.data[stringColumns] = self.data[stringColumns].astype('str')
         self.fovList = None
         if fovList:
-            with open(fovList) as f:
-                self.fovList = [fov.strip() for fov in f.readlines()]
+            fovList_path = os.path.join(str(Path(filePath).parent.parent),'fov_list',fovList)
+            if os.path.exists(fovList_path):
+                with open(fovList_path) as f:
+                    self.fovList = [fov.strip() for fov in f.readlines()]
+            else:
+                raise Exception('incorrect path for fovList')
         self._map_image_files()
 
     def get_data_channels(self) -> np.array:
@@ -319,7 +324,8 @@ class DataOrganization(object):
                     # only need the name of the file, so separeted it with os.path.basename
                     # this also avoids error in case the some part of the file path
                     # matches the regular exp
-                    matchedName = matchRE.search(os.path.basename(currentFile))
+                    # matchedName = matchRE.search(os.path.basename(currentFile))
+                    matchedName = matchRE.search(currentFile)
                     if matchedName is not None:
                         transformedName = matchedName.groupdict()
                         if transformedName['imageType'] == currentType:

@@ -519,7 +519,13 @@ class DataSet(object):
 
         savePath = self._analysis_result_save_path(
                 resultName, analysisName, resultIndex, subdirectory, '.npy')
-        return np.load(savePath, allow_pickle=True)
+
+        try:
+            return np.load(savePath, allow_pickle=True)
+        except EOFError:
+            # in case multiple process are trying to call np.load with the same handle EOFError will occur
+            # so, recursively call the function until EOFError is gone.
+            self.load_numpy_analysis_result(resultName, analysisName, resultIndex,subdirectory)
 
     def load_numpy_analysis_result_if_available(
             self, resultName: str, analysisName: str, defaultValue,
@@ -1157,7 +1163,7 @@ class MERFISHDataSet(ImageDataSet):
 
     def z_index_to_position(self, zIndex: int) -> float:
         """Get the z position associated with the provided z index."""
-        # Makeing sure the index is set appropriately
+        # Making sure the index is set appropriately
         zIndex = max(
             min(zIndex, len(self.get_z_positions()) - 1),
             0)

@@ -82,7 +82,7 @@ def lsradialcenterfit(m, b, w):
     smw = np.sum(m * wm2p1)
     smbw = np.sum(m * b * wm2p1)
     sbw = np.sum(b * wm2p1)
-    det = smw * smw - smmw * sw
+    det = ( smw * smw - smmw * sw ) + np.finfo(np.float64).eps # edite by bereket to avoid division by zero
     xc = (smbw * sw - smw * sbw) / det
     yc = (smbw * smw - smmw * sbw) / det
 
