@@ -359,7 +359,7 @@ class PixelBasedDecoder(object):
         # can be abstracted
         for b in range(self._barcodeCount):
             barcodeRegions = [x for x in measure.regionprops(
-                measure.label((decodedImage == b).astype(np.int)))
+                measure.label((decodedImage == b).astype(int)))
                               if x.area >= 5]
             barcodesSeen[b] = len(barcodeRegions)
             for br in barcodeRegions:
