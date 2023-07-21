@@ -129,7 +129,7 @@ def radial_center(imageIn) -> Tuple[float, float]:
 
     b = ym - np.multiply(m, xm)
 
-    sdI2 = np.sum(dImag2)
+    sdI2 = np.sum(dImag2) + np.finfo(np.float64).eps
     xcentroid = np.sum(np.sum(np.multiply(dImag2, xm))) / sdI2
     ycentroid = np.sum(np.multiply(dImag2, ym)) / sdI2
     w = np.divide(dImag2, np.sqrt(
