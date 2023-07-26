@@ -118,6 +118,9 @@ def merlin():
         fovList=_clean_string_arg(args.fovs)
     )
 
+    # import pdb
+    # pdb.set_trace()
+
     parametersHome = m.ANALYSIS_PARAMETERS_HOME
     e = executor.LocalExecutor(coreCount=args.core_count)
     snakefilePath = None
@@ -143,6 +146,7 @@ def merlin():
             else:
                 print('Running %s' % args.analysis_task)
                 e.run(task, index=args.fragment_index)
+
         elif snakefilePath:
             snakemakeParameters = {}
             if args.snakemake_parameters:

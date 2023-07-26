@@ -7,7 +7,7 @@ import cv2
 from sklearn.neighbors import NearestNeighbors
 from scipy.signal import fftconvolve
 from scipy import ndimage
-
+from dask import array as da
 from merlin.core import analysistask
 from merlin.util import aberration
 
@@ -428,9 +428,42 @@ class AlignDAPI3D(analysistask.ParallelAnalysisTask):
                 images are arranged as [channel, zIndex, x, y]
         """
         dataChannels = self.dataSet.get_data_organization().get_data_channels()
+        # zIndexes = range(len(self.dataSet.get_z_positions()))
+        # return np.array([[self.get_aligned_image(fov, d, z, chromaticCorrector)
+        #                   for z in zIndexes] for d in dataChannels])
+        return np.array([self.get_aligned_image_withDask(fov, d, chromaticCorrector) for d in dataChannels])
+
+    def get_aligned_image_withDask(self,fov:str,
+                                   dataChannel:int,
+                                   ChromaticCorrector:aberration.ChromaticCorrector = None) -> np.array:
+        """
+        Get aligned image
+
+        Args:
+            fov: index of the field of view
+            dataChannel: index of the data channel
+            zIndex: index of the z position
+            chromaticCorrector: the ChromaticCorrector to use to chromatically correct the images.
+            If not supplied, no correction is performed
+        Returns:
+            a 3-dimensional numpy array containing the specified image
+
+        """
         zIndexes = range(len(self.dataSet.get_z_positions()))
-        return np.array([[self.get_aligned_image(fov, d, z, chromaticCorrector)
-                          for z in zIndexes] for d in dataChannels])
+        ImageStack = np.array([self.dataSet.get_raw_image(
+            dataChannel, fov,z ) for z in zIndexes])
+
+        if chromaticCorrector is not None:
+            imageColor = self.dataSet.get_data_organization()\
+                            .get_data_channel_color(dataChannel)
+            ImageStack = np.array([ chromaticCorrector.transform_image(
+                inputImage, imageColor).astype(inputImage.dtype) for inputImage in ImageStack])
+
+        # apply the 3D transformation through dask roll and return the array
+        return np.array(  da.roll(ImageStack,
+                          self.get_transformation(fov, dataChannel),
+                           axis = (0,1,2) )
+                         )
 
     def get_aligned_image(
             self, fov: str, dataChannel: int, zIndex: int,

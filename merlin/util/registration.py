@@ -134,7 +134,7 @@ def radial_center(imageIn) -> Tuple[float, float]:
     ycentroid = np.sum(np.multiply(dImag2, ym)) / sdI2
     w = np.divide(dImag2, np.sqrt(
         (xm - xcentroid) * (xm - xcentroid) + (ym - ycentroid) * (
-                    ym - ycentroid)))
+                    ym - ycentroid))  + np.finfo(np.float64).eps )
 
     xc, yc = lsradialcenterfit(m, b, w)
 
